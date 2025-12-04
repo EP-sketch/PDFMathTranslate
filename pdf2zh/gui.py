@@ -137,6 +137,7 @@ def translate_file(
     if flag_demo and not verify_recaptcha(recaptcha_response):
         raise gr.Error("reCAPTCHA fail")
 
+    gr.Info(f"Starting translation using {service}...")
     progress(0, desc="Starting translation...")
 
     output = Path("pdf2zh_files")
@@ -144,11 +145,11 @@ def translate_file(
 
     if file_type == "File":
         if not file_input:
-            raise gr.Error("No input")
+            raise gr.Error("No input file provided. Please upload a PDF file.")
         file_path = shutil.copy(file_input, output)
     else:
         if not link_input:
-            raise gr.Error("No input")
+            raise gr.Error("No link provided. Please enter a valid URL.")
         file_path = download_with_limit(
             link_input,
             output,
@@ -187,24 +188,39 @@ def translate_file(
     print(param)
     try:
         translate(**param)
+        print(f"Files after translation: {os.listdir(output)}")
+
+        if not file_mono.exists() or not file_dual.exists():
+            raise gr.Error(
+                "Translation completed but output files were not generated. Please try again."
+            )
+
+        progress(1.0, desc="Translation complete!")
+        gr.Info("Translation complete! Files are ready for download.")
+
+        return (
+            str(file_mono),
+            str(file_mono),
+            str(file_dual),
+            gr.update(visible=True),
+            gr.update(visible=True),
+            gr.update(visible=True),
+        )
     except CancelledError:
-        del cancellation_event_map[session_id]
-        raise gr.Error("Translation cancelled")
-    print(f"Files after translation: {os.listdir(output)}")
-
-    if not file_mono.exists() or not file_dual.exists():
-        raise gr.Error("No output")
-
-    progress(1.0, desc="Translation complete!")
-
-    return (
-        str(file_mono),
-        str(file_mono),
-        str(file_dual),
-        gr.update(visible=True),
-        gr.update(visible=True),
-        gr.update(visible=True),
-    )
+        raise gr.Error("Translation cancelled by user")
+    except gr.Error:
+        # Re-raise Gradio errors as-is (e.g., from file existence check)
+        raise
+    except Exception as e:
+        # Provide user-friendly error message while logging technical details
+        print(f"Translation error: {str(e)}")
+        raise gr.Error(
+            "Translation failed. Please check your input file and try again."
+        )
+    finally:
+        # Clean up session
+        if session_id in cancellation_event_map:
+            del cancellation_event_map[session_id]
 
 
 # Global setup
