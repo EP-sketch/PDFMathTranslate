@@ -137,6 +137,7 @@ def translate_file(
     if flag_demo and not verify_recaptcha(recaptcha_response):
         raise gr.Error("reCAPTCHA fail")
 
+    gr.Info(f"Starting translation using {service}...")
     progress(0, desc="Starting translation...")
 
     output = Path("pdf2zh_files")
@@ -144,11 +145,11 @@ def translate_file(
 
     if file_type == "File":
         if not file_input:
-            raise gr.Error("No input")
+            raise gr.Error("No input file provided. Please upload a PDF file.")
         file_path = shutil.copy(file_input, output)
     else:
         if not link_input:
-            raise gr.Error("No input")
+            raise gr.Error("No link provided. Please enter a valid URL.")
         file_path = download_with_limit(
             link_input,
             output,
@@ -189,13 +190,25 @@ def translate_file(
         translate(**param)
     except CancelledError:
         del cancellation_event_map[session_id]
+        gr.Warning("Translation was cancelled by user.")
         raise gr.Error("Translation cancelled")
+    except Exception as e:
+        del cancellation_event_map[session_id]
+        gr.Error(f"Translation failed: {str(e)}")
+        raise
     print(f"Files after translation: {os.listdir(output)}")
 
     if not file_mono.exists() or not file_dual.exists():
-        raise gr.Error("No output")
+        raise gr.Error(
+            "Translation completed but output files were not generated. Please try again."
+        )
 
     progress(1.0, desc="Translation complete!")
+    gr.Info("Translation complete! Files are ready for download.")
+
+    # Clean up session
+    if session_id in cancellation_event_map:
+        del cancellation_event_map[session_id]
 
     return (
         str(file_mono),
