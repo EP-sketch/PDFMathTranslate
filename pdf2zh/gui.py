@@ -187,19 +187,7 @@ def translate_file(
     }
     print(param)
     try:
-        try:
-            translate(**param)
-        except CancelledError:
-            raise gr.Error("Translation cancelled by user")
-        except Exception as e:
-            # Provide user-friendly error message while logging technical details
-            print(f"Translation error: {str(e)}")
-            error_msg = (
-                "Translation failed. Please check your input file and try again."
-            )
-            if "connection" in str(e).lower() or "timeout" in str(e).lower():
-                error_msg = "Translation failed due to connection issues. Please check your internet connection and try again."
-            raise gr.Error(error_msg)
+        translate(**param)
         print(f"Files after translation: {os.listdir(output)}")
 
         if not file_mono.exists() or not file_dual.exists():
@@ -217,6 +205,17 @@ def translate_file(
             gr.update(visible=True),
             gr.update(visible=True),
             gr.update(visible=True),
+        )
+    except CancelledError:
+        raise gr.Error("Translation cancelled by user")
+    except gr.Error:
+        # Re-raise Gradio errors as-is
+        raise
+    except Exception as e:
+        # Provide user-friendly error message while logging technical details
+        print(f"Translation error: {str(e)}")
+        raise gr.Error(
+            "Translation failed. Please check your input file and try again."
         )
     finally:
         # Clean up session
