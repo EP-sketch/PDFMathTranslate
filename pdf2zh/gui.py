@@ -209,7 +209,7 @@ def translate_file(
     except CancelledError:
         raise gr.Error("Translation cancelled by user")
     except gr.Error:
-        # Re-raise Gradio errors as-is
+        # Re-raise Gradio errors as-is (e.g., from file existence check)
         raise
     except Exception as e:
         # Provide user-friendly error message while logging technical details
