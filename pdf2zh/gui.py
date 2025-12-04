@@ -187,36 +187,41 @@ def translate_file(
     }
     print(param)
     try:
-        translate(**param)
-    except CancelledError:
-        del cancellation_event_map[session_id]
-        gr.Warning("Translation was cancelled by user.")
-        raise gr.Error("Translation cancelled")
-    except Exception as e:
-        del cancellation_event_map[session_id]
-        raise gr.Error(f"Translation failed: {str(e)}")
-    print(f"Files after translation: {os.listdir(output)}")
+        try:
+            translate(**param)
+        except CancelledError:
+            raise gr.Error("Translation cancelled by user")
+        except Exception as e:
+            # Provide user-friendly error message while logging technical details
+            print(f"Translation error: {str(e)}")
+            error_msg = (
+                "Translation failed. Please check your input file and try again."
+            )
+            if "connection" in str(e).lower() or "timeout" in str(e).lower():
+                error_msg = "Translation failed due to connection issues. Please check your internet connection and try again."
+            raise gr.Error(error_msg)
+        print(f"Files after translation: {os.listdir(output)}")
 
-    if not file_mono.exists() or not file_dual.exists():
-        raise gr.Error(
-            "Translation completed but output files were not generated. Please try again."
+        if not file_mono.exists() or not file_dual.exists():
+            raise gr.Error(
+                "Translation completed but output files were not generated. Please try again."
+            )
+
+        progress(1.0, desc="Translation complete!")
+        gr.Info("Translation complete! Files are ready for download.")
+
+        return (
+            str(file_mono),
+            str(file_mono),
+            str(file_dual),
+            gr.update(visible=True),
+            gr.update(visible=True),
+            gr.update(visible=True),
         )
-
-    progress(1.0, desc="Translation complete!")
-    gr.Info("Translation complete! Files are ready for download.")
-
-    # Clean up session
-    if session_id in cancellation_event_map:
-        del cancellation_event_map[session_id]
-
-    return (
-        str(file_mono),
-        str(file_mono),
-        str(file_dual),
-        gr.update(visible=True),
-        gr.update(visible=True),
-        gr.update(visible=True),
-    )
+    finally:
+        # Clean up session
+        if session_id in cancellation_event_map:
+            del cancellation_event_map[session_id]
 
 
 # Global setup
