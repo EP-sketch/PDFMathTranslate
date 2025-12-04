@@ -29,7 +29,13 @@ English | [简体中文](README_zh-CN.md) | [日本語](README_ja-JP.md)
 
 </div>
 
-PDF scientific paper translation and bilingual comparison.
+## About
+
+PDFMathTranslate is a powerful tool designed for translating scientific PDF documents while preserving the integrity of mathematical formulas, figures, and document structure. Unlike conventional PDF translators that often corrupt equations and layouts, this tool specializes in handling academic papers, research documents, and technical materials with precision.
+
+The tool offers bilingual document generation, allowing researchers and students to read translated papers alongside the original text. This is particularly valuable for understanding complex technical content in different languages while maintaining reference to the original terminology.
+
+**Key Features:**
 
 - 📊 Preserve formulas, charts, table of contents, and annotations *([preview](#preview))*.
 - 🌐 Support [multiple languages](#language), and diverse [translation services](#services).
