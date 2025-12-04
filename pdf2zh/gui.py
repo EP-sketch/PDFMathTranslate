@@ -194,8 +194,7 @@ def translate_file(
         raise gr.Error("Translation cancelled")
     except Exception as e:
         del cancellation_event_map[session_id]
-        gr.Error(f"Translation failed: {str(e)}")
-        raise
+        raise gr.Error(f"Translation failed: {str(e)}")
     print(f"Files after translation: {os.listdir(output)}")
 
     if not file_mono.exists() or not file_dual.exists():
