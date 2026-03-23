@@ -106,7 +106,7 @@ Download [setup.bat](https://raw.githubusercontent.com/Byaidu/PDFMathTranslate/r
       pdf2zh -i
       ```
 
-4. If your browswer has not been started automatically, goto
+4. If your browser has not been started automatically, goto
 
     ```bash
     http://localhost:7860/
